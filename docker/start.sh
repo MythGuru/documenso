@@ -25,7 +25,23 @@ printf "📊 Certificate status: http://localhost:3000/api/certificate-status\n"
 printf "👥 Community: https://github.com/documenso/documenso\n\n"
 
 printf "🗄️  Running database migrations...\n"
-npx prisma migrate deploy --schema ../../packages/prisma/schema.prisma
+# Try different paths for the schema file
+if [ -f "../../packages/prisma/schema.prisma" ]; then
+    npx prisma migrate deploy --schema ../../packages/prisma/schema.prisma
+elif [ -f "../packages/prisma/schema.prisma" ]; then
+    npx prisma migrate deploy --schema ../packages/prisma/schema.prisma
+elif [ -f "/app/packages/prisma/schema.prisma" ]; then
+    npx prisma migrate deploy --schema /app/packages/prisma/schema.prisma
+else
+    printf "⚠️  Warning: Could not find Prisma schema file, skipping migrations\n"
+    printf "📂 Current directory: $(pwd)\n"
+    printf "📂 Directory contents:\n"
+    ls -la
+    printf "📂 Parent directory contents:\n"
+    ls -la ..
+    printf "📂 /app contents:\n"
+    ls -la /app
+fi
 
 printf "🌟 Starting Documenso server...\n"
 HOSTNAME=0.0.0.0 node build/server/main.js
