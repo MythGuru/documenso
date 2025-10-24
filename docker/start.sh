@@ -25,23 +25,35 @@ printf "📊 Certificate status: http://localhost:3000/api/certificate-status\n"
 printf "👥 Community: https://github.com/documenso/documenso\n\n"
 
 printf "🗄️  Running database migrations...\n"
-# Try different paths for the schema file
-if [ -f "../../packages/prisma/schema.prisma" ]; then
-    npx prisma migrate deploy --schema ../../packages/prisma/schema.prisma
-elif [ -f "../packages/prisma/schema.prisma" ]; then
-    npx prisma migrate deploy --schema ../packages/prisma/schema.prisma
-elif [ -f "/app/packages/prisma/schema.prisma" ]; then
-    npx prisma migrate deploy --schema /app/packages/prisma/schema.prisma
+printf "📂 Current directory: $(pwd)\n"
+
+# Use absolute path for Prisma schema
+SCHEMA_PATH="/app/packages/prisma/schema.prisma"
+
+printf "🔍 Checking for schema at: $SCHEMA_PATH\n"
+if [ -f "$SCHEMA_PATH" ]; then
+    printf "✅ Schema file found!\n"
+    printf "🔄 Running migrations...\n"
+    npx prisma migrate deploy --schema "$SCHEMA_PATH"
+    MIGRATION_EXIT_CODE=$?
+    if [ $MIGRATION_EXIT_CODE -eq 0 ]; then
+        printf "✅ Migrations completed successfully!\n"
+    else
+        printf "❌ Migrations failed with exit code: $MIGRATION_EXIT_CODE\n"
+        printf "⚠️  Continuing anyway to allow debugging...\n"
+    fi
 else
-    printf "⚠️  Warning: Could not find Prisma schema file, skipping migrations\n"
-    printf "📂 Current directory: $(pwd)\n"
-    printf "📂 Directory contents:\n"
-    ls -la
-    printf "📂 Parent directory contents:\n"
-    ls -la ..
-    printf "📂 /app contents:\n"
-    ls -la /app
+    printf "❌ Schema file not found at: $SCHEMA_PATH\n"
+    printf "📂 Listing /app directory:\n"
+    ls -la /app || printf "Cannot list /app\n"
+    printf "📂 Listing /app/packages directory:\n"
+    ls -la /app/packages || printf "Cannot list /app/packages\n"
+    printf "⚠️  Skipping migrations - app may not work correctly!\n"
 fi
 
 printf "🌟 Starting Documenso server...\n"
+# Railway sets PORT environment variable, default to 3000 if not set
+export PORT="${PORT:-3000}"
+printf "🌐 Server will listen on port: $PORT\n"
+printf "🌐 Binding to: 0.0.0.0:$PORT\n"
 HOSTNAME=0.0.0.0 node build/server/main.js
