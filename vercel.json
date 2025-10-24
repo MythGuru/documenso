@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm install && npx turbo run build --filter=@documenso/remix",
+  "outputDirectory": "apps/remix/build/client",
+  "installCommand": "npm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/apps/remix/build/server/index.js"
+    }
+  ]
+}
+
